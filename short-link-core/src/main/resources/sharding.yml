@@ -1,0 +1,54 @@
+mode:
+  type: Memory
+
+dataSources:
+  ds0:
+    dataSourceClassName: com.zaxxer.hikari.HikariDataSource
+    driverClassName: com.mysql.cj.jdbc.Driver
+    jdbcUrl: jdbc:mysql://localhost:3306/short_link_db_0?characterEncoding=utf-8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
+    username: root
+    password: root
+    maxPoolSize: 100
+    minPoolSize: 20
+    idleTimeout: 60000
+    maxLifetime: 1800000
+    connectionTimeout: 30000
+  ds1:
+    dataSourceClassName: com.zaxxer.hikari.HikariDataSource
+    driverClassName: com.mysql.cj.jdbc.Driver
+    jdbcUrl: jdbc:mysql://localhost:3306/short_link_db_1?characterEncoding=utf-8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
+    username: root
+    password: root
+    maxPoolSize: 100
+    minPoolSize: 20
+    idleTimeout: 60000
+    maxLifetime: 1800000
+    connectionTimeout: 30000
+
+rules:
+  - !SHARDING
+    tables:
+      t_short_link:
+        actualDataNodes: ds${0..1}.t_short_link_${0..7}
+        databaseStrategy:
+          standard:
+            shardingColumn: short_code
+            shardingAlgorithmName: database-inline
+        tableStrategy:
+          standard:
+            shardingColumn: short_code
+            shardingAlgorithmName: table-inline
+
+    shardingAlgorithms:
+      database-inline:
+        type: INLINE
+        props:
+          algorithm-expression: ds${Math.abs(short_code.hashCode() % 2)}
+      table-inline:
+        type: INLINE
+        props:
+          algorithm-expression: t_short_link_${Math.abs(short_code.hashCode() % 8)}
+
+props:
+  sql-show: false
+  simple-show: true

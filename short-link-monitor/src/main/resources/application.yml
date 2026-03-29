@@ -1,0 +1,40 @@
+spring:
+  application:
+    name: short-link-monitor
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+  config:
+    import: optional:nacos:short-link-monitor.yaml   # 从 Nacos 加载配置
+  cloud:
+    nacos:
+      server-addr: 192.168.100.104:8848
+      config:
+        import-check:
+          enabled: false
+    sentinel:
+      transport:
+        dashboard: 192.168.100.104:8858
+      metric:
+        enabled: true
+
+server:
+  port: 8082
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: prometheus,health,info,metrics
+  endpoint:
+    prometheus:
+      enabled: true
+    health:
+      show-details: always
+  metrics:
+    tags:
+      application: ${spring.application.name}
+  prometheus:
+    metrics:
+      export:
+        enabled: true

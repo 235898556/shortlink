@@ -1,0 +1,75 @@
+server:
+  port: 9999
+
+spring:
+  application:
+    name: short-link-gateway
+
+  config:
+    import: optional:nacos:short-link-gateway.yaml
+
+  cloud:
+    nacos:
+      server-addr: 192.168.100.104:8848
+      discovery:
+        enabled: true
+
+    gateway:
+      # 开启服务发现自动路由（强烈推荐添加）
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true   # Nacos 服务名转小写
+
+      routes:
+        # API 接口路由
+        - id: short-link-core-api
+          uri: lb://short-link-core
+          predicates:
+            - Path=/api/short/**
+          filters:
+            - StripPrefix=1
+            - name: RequestRateLimiter
+              args:
+                key-resolver: "#{@ipKeyResolver}"
+                redis-rate-limiter.replenishRate: 200
+                redis-rate-limiter.burstCapacity: 400
+                redis-rate-limiter.requestedTokens: 1
+
+        # 短链重定向路由
+        - id: short-link-redirect
+          uri: lb://short-link-core
+          predicates:
+            - Path=/{shortCode}
+          filters:
+            - name: RequestRateLimiter
+              args:
+                key-resolver: "#{@ipKeyResolver}"
+                redis-rate-limiter.replenishRate: 20000
+                redis-rate-limiter.burstCapacity: 30000
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      lettuce:
+        pool:
+          max-active: 1200
+          max-idle: 500
+          min-idle: 100
+          max-wait: 100ms
+
+
+
+sentinel:
+  transport:
+    dashboard: 192.168.100.104:8858
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
