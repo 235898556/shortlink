@@ -60,4 +60,5 @@ mvn spring-boot:run -pl short-link-stats
 - **架构优势**：Gateway 层纯内存 Bloom Filter + 本地 Caffeine 缓存，几乎无网络 IO，轻松承载高并发跳转场景
 ####压测
 采用nginx,三个网关实例+五个short-link-core实例,进行压测，采用ab压测跳转接口结果可达到10万不出现错误请求
-
+压测结果
+http://106.12.149.130:8090/p.jpg
